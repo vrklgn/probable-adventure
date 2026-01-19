@@ -56,6 +56,27 @@ main {
   margin-bottom: 32px;
 }
 
+.ticker-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.logotype {
+  font-family: "Uncial Antiqua", "Cinzel Decorative", serif;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f5d36a;
+}
+
+.tagline {
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  font-size: 0.85rem;
+  color: #9aa1b2;
+}
+
 .main-symbol {
   font-size: clamp(2.4rem, 7vw, 5rem);
 }
@@ -81,6 +102,47 @@ main {
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
   text-align: center;
+}
+
+.influence-meter {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.meter-face {
+  font-size: 2rem;
+}
+
+.meter-track {
+  position: relative;
+  flex: 1;
+  height: 18px;
+  background: #0b0d12;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.meter-fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: linear-gradient(90deg, rgba(255, 122, 122, 0.9), rgba(245, 211, 106, 0.95), rgba(90, 245, 155, 0.95));
+  transition: width 0.4s ease;
+}
+
+.meter-value {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #e6e9f0;
+  padding-top: 2px;
 }
 
 .ticker-card {
@@ -244,5 +306,14 @@ button.secondary {
   .ticker-row,
   .admin-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .influence-meter {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .meter-track {
+    width: 100%;
   }
 }

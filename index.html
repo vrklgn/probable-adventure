@@ -4,6 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Adventurers Stock Ticker</title>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&display=swap"
+    />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
@@ -11,7 +15,19 @@
       <section class="counter-shell">
         <div class="counter-window">
           <div class="main-number" id="mainNumber"></div>
+          <div class="ticker-header">
+            <div class="logotype">The Network</div>
+            <div class="tagline">Influence Tracker</div>
+          </div>
           <div class="ticker-row" id="tickerRow"></div>
+          <div class="influence-meter" aria-label="Influence meter">
+            <span class="meter-face" aria-hidden="true">😞</span>
+            <div class="meter-track">
+              <div class="meter-fill" id="meterFill"></div>
+              <div class="meter-value" id="meterValue">0 / 600</div>
+            </div>
+            <span class="meter-face" aria-hidden="true">🤩</span>
+          </div>
         </div>
       </section>
     </main>

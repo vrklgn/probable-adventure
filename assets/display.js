@@ -53,6 +53,21 @@ const formatValues = (values) =>
 
 const computeTotal = (values) => values.reduce((sum, value) => sum + value, 0);
 
+const renderInfluenceMeter = (totalScore, maxScore = 600) => {
+  const fillEl = document.getElementById("meterFill");
+  const valueEl = document.getElementById("meterValue");
+  if (!fillEl || !valueEl) {
+    return;
+  }
+
+  const safeTotal = Number.isFinite(totalScore) ? totalScore : 0;
+  const safeMax = Number.isFinite(maxScore) && maxScore > 0 ? maxScore : 600;
+  const percentage = Math.min(100, Math.max(0, (safeTotal / safeMax) * 100));
+
+  fillEl.style.width = `${percentage}%`;
+  valueEl.textContent = `${safeTotal} / ${safeMax}`;
+};
+
 const renderMainNumber = (totalChange) => {
   const container = document.getElementById("mainNumber");
   container.innerHTML = "";
@@ -127,9 +142,11 @@ const renderTicker = (changes) => {
 const updateDisplay = () => {
   const data = loadData();
   const values = formatValues(data.values);
+  const totalScore = computeTotal(values);
   const totalChange = Number(data.totalChange ?? 0);
   renderMainNumber(totalChange);
   renderTicker(data.changes);
+  renderInfluenceMeter(totalScore);
   document.title = `Adventurers Trend · ${totalChange.toFixed(1)}%`;
 };
 
