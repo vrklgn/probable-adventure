@@ -1,7 +1,7 @@
 const STORAGE_KEY = "rpg-tally-data";
 
 const CHARACTER_NAMES = [
-  "John, Warlock of Oz",
+  "John Warlock of Oz",
   "Kim of House Kardar",
   "Magus Crumbslayer",
   "Ye of The West",
@@ -79,6 +79,18 @@ const renderMainNumber = (totalChange) => {
   container.append(symbolEl, valueEl);
 };
 
+const buildNameFragments = (name) => {
+  const [firstWord, ...restWords] = name.split(" ");
+  if (restWords.length === 0) {
+    return [document.createTextNode(firstWord)];
+  }
+  return [
+    document.createTextNode(firstWord),
+    document.createElement("br"),
+    document.createTextNode(restWords.join(" ")),
+  ];
+};
+
 const renderTicker = (changes) => {
   const tickerRow = document.getElementById("tickerRow");
   tickerRow.innerHTML = "";
@@ -89,7 +101,9 @@ const renderTicker = (changes) => {
 
     const charEl = document.createElement("div");
     charEl.className = "ticker-char";
-    charEl.textContent = name;
+    buildNameFragments(name).forEach((node) => {
+      charEl.appendChild(node);
+    });
 
     const changeValue = Number(changes[index] ?? 0);
     const changeEl = document.createElement("div");
