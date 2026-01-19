@@ -80,7 +80,27 @@ const buildInputs = () => {
     valueInput.dataset.type = "value";
     valueInput.dataset.index = index;
 
-    wrapper.append(label, valueInput);
+    const actions = document.createElement("div");
+    actions.className = "field-actions";
+
+    const decreaseButton = document.createElement("button");
+    decreaseButton.type = "button";
+    decreaseButton.className = "field-roll field-roll-down";
+    decreaseButton.textContent = "-";
+    decreaseButton.dataset.index = index;
+    decreaseButton.dataset.roll = "down";
+    decreaseButton.setAttribute("aria-label", "Roll d6 and subtract");
+
+    const increaseButton = document.createElement("button");
+    increaseButton.type = "button";
+    increaseButton.className = "field-roll field-roll-up";
+    increaseButton.textContent = "+";
+    increaseButton.dataset.index = index;
+    increaseButton.dataset.roll = "up";
+    increaseButton.setAttribute("aria-label", "Roll d6 and add");
+
+    actions.append(decreaseButton, increaseButton);
+    wrapper.append(label, valueInput, actions);
     container.appendChild(wrapper);
   }
 };
@@ -93,6 +113,7 @@ const hydrateInputs = (data) => {
 };
 
 const clampValue = (value) => Math.min(100, Math.max(0, value));
+const rollDie = () => Math.floor(Math.random() * 6) + 1;
 
 const formatValues = (values) =>
   values.map((value) => {
@@ -157,6 +178,9 @@ const renderUpdatedAt = (timestamp) => {
   updatedEl.textContent = `Last updated: ${formatted}`;
 };
 
+const getValueInput = (index) =>
+  document.querySelector(`input[data-type='value'][data-index='${index}']`);
+
 const collectFormValues = () => {
   const valueInputs = [...document.querySelectorAll("input[data-type='value']")];
 
@@ -193,26 +217,16 @@ const persistData = () => {
   renderUpdatedAt(payload.updatedAt);
 };
 
-const resetData = () => {
-  const values = [0, 0, 0, 0, 0, 0];
-  const changes = [0, 0, 0, 0, 0, 0];
-  const payload = {
-    values,
-    changes,
-    totalChange: 0,
-    previousValues: values,
-    updatedAt: new Date().toISOString(),
-  };
-  const history = loadHistory();
-
-  if (history.previousTotal !== undefined) {
-    saveHistory(computeTotal(values));
+const applyRoll = (index, direction) => {
+  const input = getValueInput(index);
+  if (!input) {
+    return;
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-  hydrateInputs(payload);
-  renderTrend(computeTotal(values));
-  renderUpdatedAt(payload.updatedAt);
+  const current = Number.parseInt(input.value, 10);
+  const safeCurrent = Number.isNaN(current) ? 0 : current;
+  const updatedValue = clampValue(safeCurrent + rollDie() * direction);
+  input.value = updatedValue;
 };
 
 buildInputs();
@@ -226,7 +240,17 @@ document.getElementById("saveButton").addEventListener("click", (event) => {
   persistData();
 });
 
-document.getElementById("resetButton").addEventListener("click", (event) => {
-  event.preventDefault();
-  resetData();
+document.getElementById("digitInputs").addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-roll]");
+  if (!button) {
+    return;
+  }
+
+  const index = Number(button.dataset.index);
+  if (!Number.isFinite(index)) {
+    return;
+  }
+
+  const direction = button.dataset.roll === "up" ? 1 : -1;
+  applyRoll(index, direction);
 });
