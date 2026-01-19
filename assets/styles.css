@@ -93,7 +93,7 @@ main {
 }
 
 .ticker-char {
-  font-size: clamp(0.85rem, 1.8vw, 1.2rem);
+  font-size: clamp(0.55rem, 1.8vw, 0.8rem);
   font-weight: 600;
   line-height: 1.2;
   display: -webkit-box;
