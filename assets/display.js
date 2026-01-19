@@ -1,7 +1,16 @@
 const STORAGE_KEY = "rpg-tally-data";
 
+const CHARACTER_NAMES = [
+  "John, Warlock of Oz",
+  "Kim of House Kardar",
+  "Magus Crumbslayer",
+  "Ye of The West",
+  "Sharon",
+  "Joe Exquisite",
+];
+
 const defaultData = {
-  digits: [0, 0, 0, 0, 0, 0],
+  values: [0, 0, 0, 0, 0, 0],
   changes: [0, 0, 0, 0, 0, 0],
   updatedAt: null,
 };
@@ -13,8 +22,14 @@ const loadData = () => {
       return defaultData;
     }
     const parsed = JSON.parse(raw);
+    const valuesSource = Array.isArray(parsed.values)
+      ? parsed.values
+      : Array.isArray(parsed.digits)
+        ? parsed.digits
+        : defaultData.values;
+
     return {
-      digits: Array.isArray(parsed.digits) ? parsed.digits : defaultData.digits,
+      values: valuesSource,
       changes: Array.isArray(parsed.changes) ? parsed.changes : defaultData.changes,
       updatedAt: parsed.updatedAt ?? null,
     };
@@ -23,13 +38,25 @@ const loadData = () => {
   }
 };
 
-const formatTotal = (digits) => digits.join("");
+const clampValue = (value) => Math.min(100, Math.max(0, value));
 
-const renderMainNumber = (digits) => {
+const formatValues = (values) =>
+  values.map((value) => {
+    const numberValue = Number.parseInt(value, 10);
+    if (Number.isNaN(numberValue)) {
+      return 0;
+    }
+    return clampValue(numberValue);
+  });
+
+const computeTotal = (values) => values.reduce((sum, value) => sum + value, 0);
+
+const renderMainNumber = (total) => {
   const container = document.getElementById("mainNumber");
   container.innerHTML = "";
 
-  digits.forEach((digit) => {
+  const totalString = String(total);
+  totalString.split("").forEach((digit) => {
     const block = document.createElement("div");
     block.className = "flip-digit";
     block.textContent = digit;
@@ -37,17 +64,17 @@ const renderMainNumber = (digits) => {
   });
 };
 
-const renderTicker = (digits, changes) => {
+const renderTicker = (changes) => {
   const tickerRow = document.getElementById("tickerRow");
   tickerRow.innerHTML = "";
 
-  digits.forEach((digit, index) => {
+  CHARACTER_NAMES.forEach((name, index) => {
     const card = document.createElement("div");
     card.className = "ticker-card";
 
     const charEl = document.createElement("div");
     charEl.className = "ticker-char";
-    charEl.textContent = digit;
+    charEl.textContent = name;
 
     const changeValue = Number(changes[index] ?? 0);
     const changeEl = document.createElement("div");
@@ -70,10 +97,11 @@ const renderTicker = (digits, changes) => {
 
 const updateDisplay = () => {
   const data = loadData();
-  const digits = data.digits.map((digit) => String(digit).replace(/\D/g, "").padStart(1, "0").slice(0, 1));
-  renderMainNumber(digits);
-  renderTicker(digits, data.changes);
-  document.title = `RPG Tally Counter · ${formatTotal(digits)}`;
+  const values = formatValues(data.values);
+  const total = computeTotal(values);
+  renderMainNumber(total);
+  renderTicker(data.changes);
+  document.title = `RPG Tally Counter · ${total}`;
 };
 
 updateDisplay();
