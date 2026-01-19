@@ -12,6 +12,7 @@ const CHARACTER_NAMES = [
 const defaultData = {
   values: [0, 0, 0, 0, 0, 0],
   changes: [0, 0, 0, 0, 0, 0],
+  totalChange: 0,
   updatedAt: null,
 };
 
@@ -31,6 +32,7 @@ const loadData = () => {
     return {
       values: valuesSource,
       changes: Array.isArray(parsed.changes) ? parsed.changes : defaultData.changes,
+      totalChange: Number.isFinite(parsed.totalChange) ? parsed.totalChange : defaultData.totalChange,
       updatedAt: parsed.updatedAt ?? null,
     };
   } catch (error) {
@@ -51,17 +53,30 @@ const formatValues = (values) =>
 
 const computeTotal = (values) => values.reduce((sum, value) => sum + value, 0);
 
-const renderMainNumber = (total) => {
+const renderMainNumber = (totalChange) => {
   const container = document.getElementById("mainNumber");
   container.innerHTML = "";
 
-  const totalString = String(total);
-  totalString.split("").forEach((digit) => {
-    const block = document.createElement("div");
-    block.className = "flip-digit";
-    block.textContent = digit;
-    container.appendChild(block);
-  });
+  const changeValue = Number(totalChange) || 0;
+  const changeLabel = `${changeValue > 0 ? "+" : changeValue < 0 ? "-" : ""}${Math.abs(
+    changeValue,
+  ).toFixed(1)}%`;
+  const symbol = changeValue > 0 ? "▲" : changeValue < 0 ? "▼" : "•";
+  const styleClass =
+    changeValue > 0 ? "main-up" : changeValue < 0 ? "main-down" : "main-flat";
+
+  container.classList.remove("main-up", "main-down", "main-flat");
+  container.classList.add(styleClass);
+
+  const symbolEl = document.createElement("span");
+  symbolEl.className = "main-symbol";
+  symbolEl.textContent = symbol;
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "main-value";
+  valueEl.textContent = changeLabel;
+
+  container.append(symbolEl, valueEl);
 };
 
 const renderTicker = (changes) => {
@@ -82,7 +97,7 @@ const renderTicker = (changes) => {
     let label = "0.0%";
 
     if (Number.isFinite(changeValue) && changeValue !== 0) {
-      label = `${Math.abs(changeValue).toFixed(1)}%`;
+      label = `${changeValue > 0 ? "+" : "-"}${Math.abs(changeValue).toFixed(1)}%`;
       changeEl.classList.add(changeValue > 0 ? "ticker-up" : "ticker-down");
       changeEl.textContent = `${changeValue > 0 ? "▲" : "▼"} ${label}`;
     } else {
@@ -98,10 +113,10 @@ const renderTicker = (changes) => {
 const updateDisplay = () => {
   const data = loadData();
   const values = formatValues(data.values);
-  const total = computeTotal(values);
-  renderMainNumber(total);
+  const totalChange = Number(data.totalChange ?? 0);
+  renderMainNumber(totalChange);
   renderTicker(data.changes);
-  document.title = `RPG Tally Counter · ${total}`;
+  document.title = `Adventurers Trend · ${totalChange.toFixed(1)}%`;
 };
 
 updateDisplay();

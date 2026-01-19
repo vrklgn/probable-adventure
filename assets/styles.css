@@ -50,31 +50,31 @@ main {
   display: flex;
   justify-content: center;
   gap: 12px;
+  align-items: center;
   font-family: "SF Pro Rounded", "Avenir Next", "Roboto Mono", monospace;
-  font-size: clamp(2.8rem, 9vw, 7rem);
-  font-weight: 600;
+  font-size: clamp(2.8rem, 8vw, 6rem);
+  font-weight: 700;
   margin-bottom: 32px;
 }
 
-.flip-digit {
-  background: linear-gradient(180deg, #f2f3f7 0%, #e1e4ee 45%, #afb4c1 100%);
-  color: #0b0c10;
-  border-radius: 16px;
-  padding: 14px 18px;
-  min-width: 66px;
-  text-align: center;
-  position: relative;
-  box-shadow: inset 0 -10px 18px rgba(0, 0, 0, 0.25), 0 16px 30px rgba(0, 0, 0, 0.45);
+.main-symbol {
+  font-size: clamp(2.4rem, 7vw, 5rem);
 }
 
-.flip-digit::after {
-  content: "";
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 50%;
-  height: 2px;
-  background: rgba(0, 0, 0, 0.2);
+.main-value {
+  letter-spacing: 0.04em;
+}
+
+.main-up {
+  color: #5af59b;
+}
+
+.main-down {
+  color: #ff7a7a;
+}
+
+.main-flat {
+  color: #f5d36a;
 }
 
 .ticker-row {
@@ -93,8 +93,13 @@ main {
 }
 
 .ticker-char {
-  font-size: 1.5rem;
+  font-size: clamp(0.85rem, 1.8vw, 1.2rem);
   font-weight: 600;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .ticker-change {
