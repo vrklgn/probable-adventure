@@ -13,6 +13,8 @@ const CHARACTER_NAMES = [
 const defaultData = {
   values: [0, 0, 0, 0, 0, 0],
   changes: [0, 0, 0, 0, 0, 0],
+  totalChange: 0,
+  previousValues: [0, 0, 0, 0, 0, 0],
   updatedAt: null,
 };
 
@@ -32,6 +34,10 @@ const loadData = () => {
     return {
       values: valuesSource,
       changes: Array.isArray(parsed.changes) ? parsed.changes : defaultData.changes,
+      totalChange: Number.isFinite(parsed.totalChange) ? parsed.totalChange : defaultData.totalChange,
+      previousValues: Array.isArray(parsed.previousValues)
+        ? parsed.previousValues
+        : defaultData.previousValues,
       updatedAt: parsed.updatedAt ?? null,
     };
   } catch (error) {
@@ -74,18 +80,7 @@ const buildInputs = () => {
     valueInput.dataset.type = "value";
     valueInput.dataset.index = index;
 
-    const changeLabel = document.createElement("label");
-    changeLabel.textContent = "Change %";
-    changeLabel.style.fontSize = "0.75rem";
-    changeLabel.style.color = "#9aa1b2";
-
-    const changeInput = document.createElement("input");
-    changeInput.type = "number";
-    changeInput.step = "0.1";
-    changeInput.dataset.type = "change";
-    changeInput.dataset.index = index;
-
-    wrapper.append(label, valueInput, changeLabel, changeInput);
+    wrapper.append(label, valueInput);
     container.appendChild(wrapper);
   }
 };
@@ -94,10 +89,6 @@ const hydrateInputs = (data) => {
   document.querySelectorAll("input[data-type='value']").forEach((input) => {
     const index = Number(input.dataset.index);
     input.value = data.values[index] ?? 0;
-  });
-  document.querySelectorAll("input[data-type='change']").forEach((input) => {
-    const index = Number(input.dataset.index);
-    input.value = data.changes[index] ?? 0;
   });
 };
 
@@ -113,6 +104,21 @@ const formatValues = (values) =>
   });
 
 const computeTotal = (values) => values.reduce((sum, value) => sum + value, 0);
+
+const computeChangePercent = (previous, current) => {
+  const previousNumber = Number(previous);
+  const currentNumber = Number(current);
+
+  if (!Number.isFinite(previousNumber) || !Number.isFinite(currentNumber)) {
+    return 0;
+  }
+
+  if (previousNumber === 0) {
+    return currentNumber === 0 ? 0 : 100;
+  }
+
+  return ((currentNumber - previousNumber) / previousNumber) * 100;
+};
 
 const renderTrend = (currentTotal) => {
   const history = loadHistory();
@@ -153,19 +159,22 @@ const renderUpdatedAt = (timestamp) => {
 
 const collectFormValues = () => {
   const valueInputs = [...document.querySelectorAll("input[data-type='value']")];
-  const changeInputs = [...document.querySelectorAll("input[data-type='change']")];
 
   const values = formatValues(valueInputs.map((input) => input.value));
-  const changes = changeInputs.map((input) => Number(input.value) || 0);
 
-  return { values, changes };
+  return { values };
 };
 
 const persistData = () => {
   const existing = loadData();
   const history = loadHistory();
-  const { values, changes } = collectFormValues();
+  const { values } = collectFormValues();
   const currentTotal = computeTotal(values);
+  const previousValues = formatValues(existing.values ?? defaultData.values);
+  const changes = values.map((value, index) =>
+    computeChangePercent(previousValues[index] ?? 0, value),
+  );
+  const totalChange = computeChangePercent(computeTotal(previousValues), currentTotal);
 
   if (existing.updatedAt) {
     saveHistory(existing.values ? computeTotal(existing.values) : history.previousTotal);
@@ -174,6 +183,8 @@ const persistData = () => {
   const payload = {
     values,
     changes,
+    totalChange,
+    previousValues,
     updatedAt: new Date().toISOString(),
   };
 
@@ -185,7 +196,13 @@ const persistData = () => {
 const resetData = () => {
   const values = [0, 0, 0, 0, 0, 0];
   const changes = [0, 0, 0, 0, 0, 0];
-  const payload = { values, changes, updatedAt: new Date().toISOString() };
+  const payload = {
+    values,
+    changes,
+    totalChange: 0,
+    previousValues: values,
+    updatedAt: new Date().toISOString(),
+  };
   const history = loadHistory();
 
   if (history.previousTotal !== undefined) {
