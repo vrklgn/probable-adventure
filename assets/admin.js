@@ -1,8 +1,17 @@
 const STORAGE_KEY = "rpg-tally-data";
 const HISTORY_KEY = "rpg-tally-history";
 
+const CHARACTER_NAMES = [
+  "John, Warlock of Oz",
+  "Kim of House Kardar",
+  "Magus Crumbslayer",
+  "Ye of The West",
+  "Sharon",
+  "Joe Exquisite",
+];
+
 const defaultData = {
-  digits: [0, 0, 0, 0, 0, 0],
+  values: [0, 0, 0, 0, 0, 0],
   changes: [0, 0, 0, 0, 0, 0],
   updatedAt: null,
 };
@@ -14,8 +23,14 @@ const loadData = () => {
       return defaultData;
     }
     const parsed = JSON.parse(raw);
+    const valuesSource = Array.isArray(parsed.values)
+      ? parsed.values
+      : Array.isArray(parsed.digits)
+        ? parsed.digits
+        : defaultData.values;
+
     return {
-      digits: Array.isArray(parsed.digits) ? parsed.digits : defaultData.digits,
+      values: valuesSource,
       changes: Array.isArray(parsed.changes) ? parsed.changes : defaultData.changes,
       updatedAt: parsed.updatedAt ?? null,
     };
@@ -28,11 +43,11 @@ const loadHistory = () => {
   try {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) {
-      return { previousTotal: "000000" };
+      return { previousTotal: 0 };
     }
     return JSON.parse(raw);
   } catch (error) {
-    return { previousTotal: "000000" };
+    return { previousTotal: 0 };
   }
 };
 
@@ -49,13 +64,15 @@ const buildInputs = () => {
     wrapper.className = "field";
 
     const label = document.createElement("label");
-    label.textContent = `Digit ${index + 1}`;
+    label.textContent = CHARACTER_NAMES[index] ?? `Character ${index + 1}`;
 
-    const digitInput = document.createElement("input");
-    digitInput.type = "text";
-    digitInput.maxLength = 1;
-    digitInput.dataset.type = "digit";
-    digitInput.dataset.index = index;
+    const valueInput = document.createElement("input");
+    valueInput.type = "number";
+    valueInput.min = "0";
+    valueInput.max = "100";
+    valueInput.step = "1";
+    valueInput.dataset.type = "value";
+    valueInput.dataset.index = index;
 
     const changeLabel = document.createElement("label");
     changeLabel.textContent = "Change %";
@@ -68,15 +85,15 @@ const buildInputs = () => {
     changeInput.dataset.type = "change";
     changeInput.dataset.index = index;
 
-    wrapper.append(label, digitInput, changeLabel, changeInput);
+    wrapper.append(label, valueInput, changeLabel, changeInput);
     container.appendChild(wrapper);
   }
 };
 
 const hydrateInputs = (data) => {
-  document.querySelectorAll("input[data-type='digit']").forEach((input) => {
+  document.querySelectorAll("input[data-type='value']").forEach((input) => {
     const index = Number(input.dataset.index);
-    input.value = data.digits[index] ?? 0;
+    input.value = data.values[index] ?? 0;
   });
   document.querySelectorAll("input[data-type='change']").forEach((input) => {
     const index = Number(input.dataset.index);
@@ -84,13 +101,22 @@ const hydrateInputs = (data) => {
   });
 };
 
-const formatDigits = (values) => values.map((value) => String(value).replace(/\D/g, "").padStart(1, "0").slice(0, 1));
+const clampValue = (value) => Math.min(100, Math.max(0, value));
 
-const computeTotal = (digits) => digits.join("");
+const formatValues = (values) =>
+  values.map((value) => {
+    const numberValue = Number.parseInt(value, 10);
+    if (Number.isNaN(numberValue)) {
+      return 0;
+    }
+    return clampValue(numberValue);
+  });
+
+const computeTotal = (values) => values.reduce((sum, value) => sum + value, 0);
 
 const renderTrend = (currentTotal) => {
   const history = loadHistory();
-  const previousTotal = history.previousTotal ?? "000000";
+  const previousTotal = Number(history.previousTotal ?? 0);
 
   const previousNumber = Number(previousTotal);
   const currentNumber = Number(currentTotal);
@@ -126,27 +152,27 @@ const renderUpdatedAt = (timestamp) => {
 };
 
 const collectFormValues = () => {
-  const digitInputs = [...document.querySelectorAll("input[data-type='digit']")];
+  const valueInputs = [...document.querySelectorAll("input[data-type='value']")];
   const changeInputs = [...document.querySelectorAll("input[data-type='change']")];
 
-  const digits = formatDigits(digitInputs.map((input) => input.value));
+  const values = formatValues(valueInputs.map((input) => input.value));
   const changes = changeInputs.map((input) => Number(input.value) || 0);
 
-  return { digits, changes };
+  return { values, changes };
 };
 
 const persistData = () => {
   const existing = loadData();
   const history = loadHistory();
-  const { digits, changes } = collectFormValues();
-  const currentTotal = computeTotal(digits);
+  const { values, changes } = collectFormValues();
+  const currentTotal = computeTotal(values);
 
   if (existing.updatedAt) {
-    saveHistory(existing.digits ? computeTotal(existing.digits) : history.previousTotal);
+    saveHistory(existing.values ? computeTotal(existing.values) : history.previousTotal);
   }
 
   const payload = {
-    digits,
+    values,
     changes,
     updatedAt: new Date().toISOString(),
   };
@@ -157,25 +183,25 @@ const persistData = () => {
 };
 
 const resetData = () => {
-  const digits = [0, 0, 0, 0, 0, 0];
+  const values = [0, 0, 0, 0, 0, 0];
   const changes = [0, 0, 0, 0, 0, 0];
-  const payload = { digits, changes, updatedAt: new Date().toISOString() };
+  const payload = { values, changes, updatedAt: new Date().toISOString() };
   const history = loadHistory();
 
   if (history.previousTotal !== undefined) {
-    saveHistory(computeTotal(digits));
+    saveHistory(computeTotal(values));
   }
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
   hydrateInputs(payload);
-  renderTrend(computeTotal(digits));
+  renderTrend(computeTotal(values));
   renderUpdatedAt(payload.updatedAt);
 };
 
 buildInputs();
 const initialData = loadData();
 hydrateInputs(initialData);
-renderTrend(computeTotal(formatDigits(initialData.digits)));
+renderTrend(computeTotal(formatValues(initialData.values)));
 renderUpdatedAt(initialData.updatedAt);
 
 document.getElementById("saveButton").addEventListener("click", (event) => {
