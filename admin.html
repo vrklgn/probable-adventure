@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RPG Tally Counter Admin</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <main class="admin-layout">
+      <section class="admin-panel">
+        <h2>Admin Backend</h2>
+        <p class="helper-text">
+          Set the six digits and the percentage change for each character. The main display will
+          combine the digits into the total.
+        </p>
+        <div class="admin-grid" id="digitInputs"></div>
+        <div class="button-row">
+          <button id="saveButton">Save Update</button>
+          <button class="secondary" id="resetButton">Reset to 000000</button>
+        </div>
+      </section>
+      <section class="admin-panel">
+        <h2>Trend Overview</h2>
+        <p class="helper-text">Tracks the previous and current total value.</p>
+        <div>
+          <p>Previous Total: <strong id="previousTotal">0</strong></p>
+          <p>Current Total: <strong id="currentTotal">0</strong></p>
+          <p>
+            Status:
+            <span class="status-badge status-flat" id="trendStatus">No Change</span>
+          </p>
+          <p class="helper-text" id="updatedAt">No updates yet.</p>
+        </div>
+      </section>
+    </main>
+    <script src="assets/admin.js"></script>
+  </body>
+</html>
