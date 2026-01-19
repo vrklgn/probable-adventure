@@ -1,12 +1,12 @@
 const STORAGE_KEY = "rpg-tally-data";
 
 const CHARACTER_NAMES = [
-  "John Warlock of Oz",
-  "Kim of House Kardar",
-  "Magus Crumbslayer",
-  "Ye of The West",
+  "John",
+  "Kim",
+  "Magus",
+  "Ye",
   "Sharon",
-  "Joe Exquisite",
+  "Joe",
 ];
 
 const defaultData = {
